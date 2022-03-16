@@ -1,0 +1,45 @@
+_BASE_: "../Base-RCNN-FPN.yaml"
+MODEL:
+  META_ARCHITECTURE: "TwoStagePseudoLabGeneralizedRCNN"
+  WEIGHTS: "R-50.pkl" #detectron2://ImageNetPretrained/MSRA/R-50.pkl
+  MASK_ON: False
+  RESNETS:
+    DEPTH: 50
+  PROPOSAL_GENERATOR:
+    NAME: "PseudoLabRPN"
+  RPN:
+    POSITIVE_FRACTION: 0.25
+    LOSS: "CrossEntropy"
+  ROI_HEADS:
+    NAME: "StandardROIHeadsPseudoLab"
+    LOSS: "FocalLoss"
+    NUM_CLASSES: 6
+INPUT:
+  MIN_SIZE_TRAIN: (960, 1024, 1088, 1152, 1216, 1280, 1344, 1408, 1472, 1536, 1600)
+  MIN_SIZE_TEST: 1200
+SOLVER:
+  LR_SCHEDULER_NAME: "WarmupMultiStepLR"
+  STEPS: (19990, 19995)
+  MAX_ITER: 20000
+  IMS_PER_BATCH: 16
+  IMG_PER_BATCH_LABEL: 16
+  IMG_PER_BATCH_UNLABEL: 16
+  BASE_LR: 0.01
+DATALOADER:
+  SUP_PERCENT: 100.0
+  RANDOM_DATA_SEED: 1
+  RANDOM_DATA_SEED_PATH: 'dataseed/index3/soda.txt'
+DATASETS:
+  CROSS_DATASET: False
+  TRAIN: ('soda10m_train',)
+  TEST: ('soda10m_val', 'trafficrecorder_test')
+SEMISUPNET:
+  Trainer: "baseline"
+  BBOX_THRESHOLD: 0.7
+  TEACHER_UPDATE_ITER: 1
+  BURN_UP_STEP: 20000
+  EMA_KEEP_RATE: 0.9996
+  UNSUP_LOSS_WEIGHT: 2.0
+TEST:
+  EVAL_PERIOD: 1000
+  EVALUATOR: "COCOeval"
