@@ -7,7 +7,7 @@ from detectron2.config import get_cfg
 from detectron2.engine import default_argument_parser, default_setup, launch
 
 from ubteacher import add_ubteacher_config
-from ubteacher.engine.trainer import UBTeacherTrainer, BaselineTrainer
+from ubteacher.engine.trainer import UBTeacherTrainer, BaselineTrainer, DATrainer, DistillTrainer
 
 # hacky way to register
 from ubteacher.modeling.meta_arch.rcnn import TwoStagePseudoLabGeneralizedRCNN
@@ -35,8 +35,12 @@ def main(args):
     cfg = setup(args)
     if cfg.SEMISUPNET.Trainer == "ubteacher":
         Trainer = UBTeacherTrainer
-    else:
+    elif cfg.SEMISUPNET.Trainer == "baseline":
         Trainer = BaselineTrainer
+    elif cfg.SEMISUPNET.Trainer == "domainadaption":
+        Trainer = DATrainer
+    else:
+        Trainer = DistillTrainer
 
     if args.eval_only:
         if cfg.SEMISUPNET.Trainer in ["ubteacher"]:
@@ -48,12 +52,20 @@ def main(args):
                 ensem_ts_model, save_dir=cfg.OUTPUT_DIR
             ).resume_or_load(cfg.MODEL.WEIGHTS, resume=args.resume)
             res = Trainer.test(cfg, ensem_ts_model.modelTeacher)
-        else:
+        elif cfg.SEMISUPNET.Trainer == "baseline" or cfg.SEMISUPNET.Trainer == "domainadaption":
             model = Trainer.build_model(cfg)
             DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
                 cfg.MODEL.WEIGHTS, resume=args.resume
             )
             res = Trainer.test(cfg, model)
+        else:
+            model = Trainer.build_model(cfg)
+            model_teacher = Trainer.build_model(cfg)
+            ensem_ts_model = EnsembleTSModel(model_teacher, model)
+            DetectionCheckpointer(
+                ensem_ts_model, save_dir=cfg.OUTPUT_DIR
+            ).resume_or_load(cfg.MODEL.WEIGHTS, resume=args.resume)
+            res = Trainer.test(cfg, ensem_ts_model.modelStudent)
         return res
 
     trainer = Trainer(cfg)
@@ -76,6 +88,12 @@ if __name__ == "__main__":
     # #args.opts = ['SOLVER.IMG_PER_BATCH_LABEL', '8', 'SOLVER.IMG_PER_BATCH_UNLABEL', '8',  'MODEL.WEIGHTS', 'output/voc07+voc12/pick/voc07+voc12_sup25_pick_box_number20+random5_8/model_best.pth']
     # args.opts = ['SOLVER.IMG_PER_BATCH_LABEL', '16', 'SOLVER.IMG_PER_BATCH_UNLABEL', '16',  'MODEL.WEIGHTS', 'output/pick/imagenet_sup20_pick_all_indicator10+random10_16/model_best.pth']
     # # args.opts = ['OUTPUT_DIR',"output/test/imagenet_sup10_pick10_16"]
+    # import os
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
+    # args.config_file = 'configs/domain_adaption/voc07+12_sup100_da.yaml'
+    # args.dist_url='tcp://127.0.0.1:1237'
+    # args.num_gpus = 4
+    # args.opts = ['OUTPUT_DIR',"output/try", 'MODEL.WEIGHTS', 'output/baseline/voc/model_best.pth']
     print("Command Line Args:", args)
     launch(
         main,

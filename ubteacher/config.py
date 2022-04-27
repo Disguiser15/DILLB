@@ -22,6 +22,15 @@ def add_ubteacher_config(cfg):
     _C.DATASETS.CROSS_DATASET = False
     _C.TEST.EVALUATOR = "COCOeval"
 
+    # _C.DAHEADS = CN()
+    # _C.DAHEADS.DOMAIN_ADAPTION_ON = False
+    # _C.DAHEADS.DA_IMG_LOSS_WEIGHT = 0.1
+    # _C.DAHEADS.DA_INS_LOSS_WEIGHT = 0.1
+    # _C.DAHEADS.DA_CST_LOSS_WEIGHT = 0.1
+
+    # _C.DAHEADS.DA_IMG_GRL_WEIGHT = 0.1
+    # _C.DAHEADS.DA_INS_GRL_WEIGHT = 0.1
+
     _C.SEMISUPNET = CN()
 
     # Output dimension of the MLP projector after `res5` block

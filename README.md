@@ -1,16 +1,11 @@
-# Unbiased Teacher for Semi-Supervised Object Detection
+# Domain Incremental Learning for Object Detection
 
-<img src="teaser/pytorch-logo-dark.png" width="10%"> [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This is the PyTorch implementation of our paper: <br>
-**Unbiased Teacher for Semi-Supervised Object Detection**<br>
-[Yen-Cheng Liu](https://ycliu93.github.io/), [Chih-Yao Ma](https://chihyaoma.github.io/), [Zijian He](https://research.fb.com/people/he-zijian/), [Chia-Wen Kuo](https://sites.google.com/view/chiawen-kuo/home), [Kan Chen](https://kanchen.info/), [Peizhao Zhang](https://scholar.google.com/citations?user=eqQQkM4AAAAJ&hl=en), [Bichen Wu](https://scholar.google.com/citations?user=K3QJPdMAAAAJ&hl=en), [Zsolt Kira](https://www.cc.gatech.edu/~zk15/), [Peter Vajda](https://sites.google.com/site/vajdap)<br>
-International Conference on Learning Representations (ICLR), 2021 <br>
-
-[[arXiv](https://arxiv.org/abs/2102.09480)] [[OpenReview](https://openreview.net/forum?id=MJIve1zgR_)] [[Project](https://ycliu93.github.io/projects/unbiasedteacher.html)]
+**Domain Incremental Learning for Object Detection**<br>
 
 <p align="center">
-<img src="teaser/figure_teaser.gif" width="85%">
+<img src="teaser/DILLB.png" width="85%">
 </p>
 
 # Installation
@@ -51,14 +46,24 @@ wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
 2. Organize the dataset as following:
 
 ```shell
-unbiased_teacher/
+DILLB/
 └── datasets/
-    └──VOC2007/
-    └──VOC2012/
-    └── COCO2017/
-        ├── train2017/
-        ├── val2017/
+    └──bdd100k/
+        └── images/
+            ├── train
+            └── val
         └── annotations/
-        	├── instances_train2017.json
-        	└── instances_val2017.json
+            ├── bdd100k_labels_images_det_coco_train.json
+            └── bdd100k_labels_images_det_coco_val.json
+    └──Cityscapes_new/
+        └── JPEGImages/
+            ├── train_s
+            └── test_s
+        └── Annotations/
+            ├── instances_train_s.json
+            └── instances_test_s.json
+    └── two_stage_datasets/
+        └── index9/
+            ├── coco12
+            └── exdark
 ```
