@@ -1,0 +1,45 @@
+_BASE_: "../Base-RCNN-FPN.yaml"
+MODEL:
+  META_ARCHITECTURE: "TwoStagePseudoLabGeneralizedRCNN_DILLB"
+  WEIGHTS: "output/baseline/bdd/model_best_mutihead.pth" #detectron2://ImageNetPretrained/MSRA/R-50.pkl
+  MASK_ON: False
+  RESNETS:
+    DEPTH: 50
+  PROPOSAL_GENERATOR:
+    NAME: "PseudoLabRPN"
+  RPN:
+    LOSS: "CrossEntropy"
+  ROI_HEADS:
+    NAME: "StandardROIHeadsPseudoLab_DILLB"
+    LOSS: "FocalLoss"
+    NUM_CLASSES: 8
+INPUT:
+  MIN_SIZE_TRAIN: (480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800)
+  MIN_SIZE_TEST: 600
+SOLVER:
+  LR_SCHEDULER_NAME: "WarmupMultiStepLR"
+  STEPS: (60000, 80000)
+  MAX_ITER: 90000
+  IMS_PER_BATCH: 16
+  IMG_PER_BATCH_LABEL: 16
+  IMG_PER_BATCH_UNLABEL: 16
+  BASE_LR: 0.0001
+  CHECKPOINT_PERIOD: 1000
+DATALOADER:
+  SUP_PERCENT: 100.0
+  RANDOM_DATA_SEED: 1
+  RANDOM_DATA_SEED_PATH: 'dataseed/dillb/bdd1_city10.txt'
+DATASETS:
+  CROSS_DATASET: False
+  TRAIN: ('bdd_train_1%_source','cityscape_train_10%_target')
+  TEST: ( 'bdd_val_source','cityscape_test_target')
+SEMISUPNET:
+  Trainer: "dillb"
+  BBOX_THRESHOLD: 0.7
+  TEACHER_UPDATE_ITER: 1
+  BURN_UP_STEP: 1000
+  EMA_KEEP_RATE: 0.9999
+  UNSUP_LOSS_WEIGHT: 2.0
+TEST:
+  EVAL_PERIOD: 1000
+  EVALUATOR: "COCOeval"

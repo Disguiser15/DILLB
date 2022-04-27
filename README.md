@@ -67,3 +67,30 @@ DILLB/
             ├── coco12
             └── exdark
 ```
+## Training
+
+- Train the DILLB 1% COCO-12class(source) & 5% Exdark(target)
+
+```shell
+python model_to_mutihead.py \
+--input-dir ./output/baseline/coco12/model_best.pth \
+--save-dir ./output/baseline/coco12/model_best_mutihead.pth
+
+python train_net.py  \
+ --num-gpus 8 \
+ --config configs/dillb/coco1_exdark5.yaml \
+ OUTPUT_DIR output/dillb/coco1_exdark5
+```
+
+- Train the DILLB 1% BDD100k(source) & 10% Cityscapes(target)
+
+```shell
+python model_to_mutihead.py \
+--input-dir ./output/baseline/bdd/model_best.pth \
+--save-dir ./output/baseline/bdd/model_best_mutihead.pth
+
+python train_net.py  \
+ --num-gpus 8 \
+ --config configs/dillb/bdd1_city10.yaml \
+ OUTPUT_DIR output/dillb/bdd1_city10
+```

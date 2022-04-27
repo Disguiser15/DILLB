@@ -7,7 +7,7 @@ from detectron2.config import get_cfg
 from detectron2.engine import default_argument_parser, default_setup, launch
 
 from ubteacher import add_ubteacher_config
-from ubteacher.engine.trainer import UBTeacherTrainer, BaselineTrainer, DATrainer, DistillTrainer
+from ubteacher.engine.trainer import UBTeacherTrainer, BaselineTrainer, DATrainer, DistillTrainer, DILIBTrainer
 
 # hacky way to register
 from ubteacher.modeling.meta_arch.rcnn import TwoStagePseudoLabGeneralizedRCNN
@@ -33,12 +33,12 @@ def setup(args):
 
 def main(args):
     cfg = setup(args)
-    if cfg.SEMISUPNET.Trainer == "ubteacher":
-        Trainer = UBTeacherTrainer
-    elif cfg.SEMISUPNET.Trainer == "baseline":
+    if cfg.SEMISUPNET.Trainer == "baseline":
         Trainer = BaselineTrainer
     elif cfg.SEMISUPNET.Trainer == "domainadaption":
         Trainer = DATrainer
+    elif cfg.SEMISUPNET.Trainer == "dillb":
+        Trainer = DILIBTrainer
     else:
         Trainer = DistillTrainer
 

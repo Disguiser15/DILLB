@@ -172,6 +172,55 @@ def build_detection_semisup_source_train_loader(cfg, mapper=None):
         num_workers=cfg.DATALOADER.NUM_WORKERS,
     )
 
+def build_detection_semisup_DILLB_train_loader(cfg, mapper=None):
+
+    dataset_dicts = get_detection_dataset_dicts(
+        cfg.DATASETS.TRAIN,
+        filter_empty=cfg.DATALOADER.FILTER_EMPTY_ANNOTATIONS,
+        min_keypoints=cfg.MODEL.ROI_KEYPOINT_HEAD.MIN_KEYPOINTS_PER_IMAGE
+        if cfg.MODEL.KEYPOINT_ON
+        else 0,
+        proposal_files=cfg.DATASETS.PROPOSAL_FILES_TRAIN
+        if cfg.MODEL.LOAD_PROPOSALS
+        else None,
+    )
+
+    # Divide into source and target sets according to is_source or not
+    source_dicts, target_dicts = divide_source_target(
+        dataset_dicts
+    )
+
+    source_dataset = DatasetFromList(source_dicts, copy=False)
+    # exclude the labeled set from unlabeled dataset
+    target_dataset = DatasetFromList(target_dicts, copy=False)
+    # include the labeled set in unlabel dataset
+    # unlabel_dataset = DatasetFromList(dataset_dicts, copy=False)
+
+    if mapper is None:
+        mapper = DatasetMapper(cfg, True)
+    source_dataset = MapDataset(source_dataset, mapper)
+    target_dataset = MapDataset(target_dataset, mapper)
+
+    sampler_name = cfg.DATALOADER.SAMPLER_TRAIN
+    logger = logging.getLogger(__name__)
+    logger.info("Using training sampler {}".format(sampler_name))
+    if sampler_name == "TrainingSampler":
+        source_sampler = TrainingSampler(len(source_dataset))
+        target_sampler = TrainingSampler(len(target_dataset))
+    elif sampler_name == "RepeatFactorTrainingSampler":
+        raise NotImplementedError("{} not yet supported.".format(sampler_name))
+    else:
+        raise ValueError("Unknown training sampler: {}".format(sampler_name))
+    return build_semisup_batch_data_loader_two_crop_DILLB(
+        (source_dataset, target_dataset),
+        (source_sampler, target_sampler),
+        int(cfg.SOLVER.IMS_PER_BATCH/2),
+        int(cfg.SOLVER.IMS_PER_BATCH/2),
+        aspect_ratio_grouping=cfg.DATALOADER.ASPECT_RATIO_GROUPING,
+        num_workers=cfg.DATALOADER.NUM_WORKERS,
+    )
+
+
 # uesed by evaluation
 def build_detection_test_loader(cfg, dataset_name, mapper=None):
     dataset_dicts = get_detection_dataset_dicts(
@@ -384,6 +433,62 @@ def build_semisup_batch_data_loader_two_crop_source(
             worker_init_fn=worker_init_reset_seed,
         )  # yield individual mapped dict
         return AspectRatioGroupedSemiSupDatasetTwoCropSource(
+            (label_data_loader, unlabel_data_loader),
+            (batch_size_label, batch_size_unlabel),
+        )
+    else:
+        raise NotImplementedError("ASPECT_RATIO_GROUPING = False is not supported yet")
+
+def build_semisup_batch_data_loader_two_crop_DILLB(
+        dataset,
+        sampler,
+        total_batch_size_label,
+        total_batch_size_unlabel,
+        *,
+        aspect_ratio_grouping=False,
+        num_workers=0
+):
+    world_size = get_world_size()
+    assert (
+            total_batch_size_label > 0 and total_batch_size_label % world_size == 0
+    ), "Total label batch size ({}) must be divisible by the number of gpus ({}).".format(
+        total_batch_size_label, world_size
+    )
+
+    assert (
+            total_batch_size_unlabel > 0 and total_batch_size_unlabel % world_size == 0
+    ), "Total unlabel batch size ({}) must be divisible by the number of gpus ({}).".format(
+        total_batch_size_label, world_size
+    )
+
+    batch_size_label = total_batch_size_label // world_size
+    batch_size_unlabel = total_batch_size_unlabel // world_size
+
+    label_dataset, unlabel_dataset = dataset
+    label_sampler, unlabel_sampler = sampler
+
+    if aspect_ratio_grouping:
+        label_data_loader = torch.utils.data.DataLoader(
+            label_dataset,
+            sampler=label_sampler,
+            num_workers=num_workers,
+            batch_sampler=None,
+            collate_fn=operator.itemgetter(
+                0
+            ),  # don't batch, but yield individual elements
+            worker_init_fn=worker_init_reset_seed,
+        )  # yield individual mapped dict
+        unlabel_data_loader = torch.utils.data.DataLoader(
+            unlabel_dataset,
+            sampler=unlabel_sampler,
+            num_workers=num_workers,
+            batch_sampler=None,
+            collate_fn=operator.itemgetter(
+                0
+            ),  # don't batch, but yield individual elements
+            worker_init_fn=worker_init_reset_seed,
+        )  # yield individual mapped dict
+        return AspectRatioGroupedSemiSupDatasetTwoCrop(
             (label_data_loader, unlabel_data_loader),
             (batch_size_label, batch_size_unlabel),
         )

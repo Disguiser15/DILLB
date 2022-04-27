@@ -11,6 +11,205 @@ import torch.nn.functional as F
 
 from ..layer.da_heads import DomainAdaptationModule
 
+
+@META_ARCH_REGISTRY.register()
+class TwoStagePseudoLabGeneralizedRCNN_DILLB(GeneralizedRCNN):
+    def forward(
+            self, batched_inputs, branch="supervised", given_proposals=None, val_mode=False
+    ):
+
+        if (not self.training) and (not val_mode):
+            return self.inference(batched_inputs)
+
+        images = self.preprocess_image(batched_inputs)
+
+        if "instances" in batched_inputs[0]:
+            gt_instances = [x["instances"].to(self.device) for x in batched_inputs]
+        else:
+            gt_instances = None
+
+        features = self.backbone(images.tensor)
+
+        if branch == "supervised":
+            # Region proposal network
+
+            proposals_rpn, proposal_losses = self.proposal_generator(
+                images, features, gt_instances
+            )
+            # roi_head lower branch
+            features_source = {k: features.get(k, 0)[:len(features.get(k, 0)) // 2] for k in
+                               features}
+            features_target = {k: features.get(k, 0)[len(features.get(k, 0)) // 2:] for k in
+                               features}
+
+            _, detector_losses_source = self.roi_heads(
+                images, features_source, proposals_rpn[:len(proposals_rpn) // 2],
+                gt_instances[:len(gt_instances) // 2], branch=branch, data_branch="source"
+            )
+            _, detector_losses_target = self.roi_heads(
+                images, features_target, proposals_rpn[len(proposals_rpn) // 2:],
+                gt_instances[len(gt_instances) // 2:], branch=branch, data_branch="target"
+            )
+
+            detector_losses = {k: detector_losses_source.get(k, 0) + detector_losses_target.get(k, 0) for k in
+                               detector_losses_source}
+            losses = {}
+            losses.update(detector_losses)
+            losses.update(proposal_losses)
+            return losses, [], [], None
+
+        elif branch == "unsup_data_weak":
+            # Region proposal network
+            proposals_rpn, _ = self.proposal_generator(
+                images, features, None, compute_loss=False
+            )
+            features_source = {k: features.get(k, 0)[:len(features.get(k, 0)) // 2] for k in
+                               features}
+            features_target = {k: features.get(k, 0)[len(features.get(k, 0)) // 2:] for k in
+                               features}
+
+
+            proposals_roih_s, ROI_predictions_s = self.roi_heads(
+                images, features_source, proposals_rpn[:len(proposals_rpn) // 2],
+                targets=None,
+                compute_loss=False,
+                branch=branch,
+                data_branch="source"
+            )
+            proposals_roih_t, ROI_predictions_t = self.roi_heads(
+                images, features_target, proposals_rpn[len(proposals_rpn) // 2:],
+                targets=None,
+                compute_loss=False,
+                branch=branch,
+                data_branch="target"
+            )
+            proposals_roih = proposals_roih_s + proposals_roih_t
+            ROI_predictions = ROI_predictions_s + ROI_predictions_t
+
+            return {}, proposals_rpn, proposals_roih, ROI_predictions
+
+        elif branch == "val_loss":
+            # Region proposal network
+            proposals_rpn, proposal_losses = self.proposal_generator(
+                images, features, gt_instances, compute_val_loss=True
+            )
+
+            # roi_head lower branch
+            _, detector_losses = self.roi_heads(
+                images,
+                features,
+                proposals_rpn,
+                gt_instances,
+                branch=branch,
+                compute_val_loss=True,
+            )
+
+            losses = {}
+            losses.update(detector_losses)
+            losses.update(proposal_losses)
+            return losses, [], [], None
+
+    def inference(self, batched_inputs, detected_instances=None, do_postprocess=True):
+        assert not self.training
+
+        is_source = 1
+        if 'is_source' in batched_inputs[0]:
+            is_source = batched_inputs[0]['is_source']
+        images = self.preprocess_image(batched_inputs)
+        features = self.backbone(images.tensor)
+
+        if detected_instances is None:
+            if self.proposal_generator:
+                proposals, _ = self.proposal_generator(images, features, None)
+            else:
+                assert "proposals" in batched_inputs[0]
+                proposals = [x["proposals"].to(self.device) for x in batched_inputs]
+            if is_source == 1:
+                results, _ = self.roi_heads(images, features, proposals, None, data_branch="source")
+            elif is_source == 0:
+                results, _ = self.roi_heads(images, features, proposals, None, data_branch="target")
+            else:
+                results, _ = self.roi_heads(images, features, proposals, None, data_branch="old")
+        else:
+            detected_instances = [x.to(self.device) for x in detected_instances]
+            results = self.roi_heads.forward_with_given_boxes(
+                features, detected_instances
+            )
+
+        if do_postprocess:
+            return GeneralizedRCNN._postprocess(
+                results, batched_inputs, images.image_sizes
+            )
+        else:
+            return results
+
+    def inference_NMS(self, batched_inputs, detected_instances=None, do_postprocess=True):
+        assert not self.training
+
+        is_source = 1
+        if 'is_source' in batched_inputs[0]:
+            if batched_inputs[0]['is_source'] == 1:
+                is_source = 1
+            else:
+                is_source = 0
+        images = self.preprocess_image(batched_inputs)
+        features = self.backbone(images.tensor)
+
+        if detected_instances is None:
+            if self.proposal_generator:
+                proposals, _ = self.proposal_generator(images, features, None)
+            else:
+                assert "proposals" in batched_inputs[0]
+                proposals = [x["proposals"].to(self.device) for x in batched_inputs]
+            if is_source == 1:
+                results, _ = self.roi_heads(images, features, proposals, None, data_branch="source")
+            else:
+                results, _ = self.roi_heads(images, features, proposals, None, data_branch="target")
+        else:
+            print("here")
+            detected_instances = [x.to(self.device) for x in detected_instances]
+            results = self.roi_heads.forward_with_given_boxes(
+                features, detected_instances
+            )
+
+        if do_postprocess:
+            return GeneralizedRCNN._postprocess(
+                results, batched_inputs, images.image_sizes
+            ), proposals[0]._fields['proposal_boxes'].tensor
+        else:
+            return results
+
+    def inference_NMS_target(self, batched_inputs, detected_instances=None, do_postprocess=True):
+        assert not self.training
+        is_source = 0
+        images = self.preprocess_image(batched_inputs)
+        features = self.backbone(images.tensor)
+
+        if detected_instances is None:
+            if self.proposal_generator:
+                proposals, _ = self.proposal_generator(images, features, None)
+            else:
+                assert "proposals" in batched_inputs[0]
+                proposals = [x["proposals"].to(self.device) for x in batched_inputs]
+            if is_source == 1:
+                results, _ = self.roi_heads(images, features, proposals, None, data_branch="source")
+            else:
+                results, _ = self.roi_heads(images, features, proposals, None, data_branch="target")
+        else:
+            print("here")
+            detected_instances = [x.to(self.device) for x in detected_instances]
+            results = self.roi_heads.forward_with_given_boxes(
+                features, detected_instances
+            )
+
+        if do_postprocess:
+            return GeneralizedRCNN._postprocess(
+                results, batched_inputs, images.image_sizes
+            ), proposals[0]._fields['proposal_boxes'].tensor
+        else:
+            return results
+
+
 @META_ARCH_REGISTRY.register()
 class TwoStagePseudoLabGeneralizedRCNN(GeneralizedRCNN):
     def forward(

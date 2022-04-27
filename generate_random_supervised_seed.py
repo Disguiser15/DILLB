@@ -70,6 +70,6 @@ if __name__ == "__main__":
     parser = default_argument_parser()
     parser.add_argument("--random-seeds",type=str,default="0,1,2,3,4,5,6,7,8,9") #需要设置10次随机数种子，以','分割
     args = parser.parse_args()
-    args.config_file = 'configs/baseline/da/coco_1_exdark_5.yaml'
+    args.config_file = 'configs/dillb/bdd1_city10.yaml'
     # args.config_file = 'configs/soda/soda_sup26_run1.yaml'
     main(args)
