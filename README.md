@@ -86,14 +86,14 @@ python train_net.py  \
 ```
 2. Baseline
 
-- Finetune with 1% COCO-12class(source) & 5% Exdark(target)
+- Finetune with 1% COCO-12class (source) & 5% Exdark (target)
 ```shell
 python train_net.py  \
  --num-gpus 4 \
  --config configs/baseline/finetune/coco12_1_exdark_5.yaml \
  OUTPUT_DIR output/finetune/coco12
 ```
-- Finetune with 1% BDD100k(source) & 10% Cityscapes(target)
+- Finetune with 1% BDD100k (source) & 10% Cityscapes (target)
 ```shell
 python train_net.py  \
  --num-gpus 4 \
@@ -101,14 +101,14 @@ python train_net.py  \
  OUTPUT_DIR output/finetune/bdd
 ```
 
-- Finetune(Frozen backbone) with 1% COCO-12class(source) & 5% Exdark(target)
+- Finetune (Frozen backbone) with 1% COCO-12class (source) & 5% Exdark (target)
 ```shell
 python train_net.py  \
  --num-gpus 4 \
  --config configs/baseline/frozen/coco12_1_exdark_5_frozen.yaml \
  OUTPUT_DIR output/frozen/coco12
 ```
-- Finetune(Frozen backbone) with 1% BDD100k(source) & 10% Cityscapes(target)
+- Finetune (Frozen backbone) with 1% BDD100k (source) & 10% Cityscapes (target)
 ```shell
 python train_net.py  \
  --num-gpus 4 \
@@ -116,7 +116,7 @@ python train_net.py  \
  OUTPUT_DIR output/frozen/bdd
 ```
 
-- Frozen Network with 1% COCO-12class(source) & 5% Exdark(target)
+- Frozen Network with 1% COCO-12class (source) & 5% Exdark (target)
 ```shell
 python tools/extrabranch/make_extrabranch_weight.py \
 --input-dir ./output/baseline/coco12/model_best.pth \
@@ -127,7 +127,7 @@ python train_net.py  \
  --config configs/baseline/extrabranch/coco_1_exdark_5_extra_branch.yaml \
  OUTPUT_DIR output/extrabranch/coco12
 ```
-- Frozen Network with 1% BDD100k(source) & 10% Cityscapes(target)
+- Frozen Network with 1% BDD100k (source) & 10% Cityscapes (target)
 ```shell
 python tools/extrabranch/make_extrabranch_weight.py \
 --input-dir ./output/baseline/bdd/model_best.pth \
@@ -139,7 +139,7 @@ python train_net.py  \
  OUTPUT_DIR output/extrabranch/bdd
 ```
 
-- Distill with 1% COCO-12class(source) & 5% Exdark(target)
+- Distill with 1% COCO-12class (source) & 5% Exdark (target)
 ```shell
 python tools/distill/make_distill_weight.py \
 --input-dir ./output/baseline/coco12/model_best.pth \
@@ -150,7 +150,7 @@ python train_net.py  \
  --config configs/baseline/distill/coco_1_exdark_5.yaml \
  OUTPUT_DIR output/distill/coco12
 ```
-- Distill with 1% BDD100k(source) & 10% Cityscapes(target)
+- Distill with 1% BDD100k (source) & 10% Cityscapes (target)
 ```shell
 python tools/distill/make_distill_weight.py \
 --input-dir ./output/baseline/bdd/model_best.pth \
@@ -162,14 +162,14 @@ python train_net.py  \
  OUTPUT_DIR output/distill/bdd
 ```
 
-- Train with 1% COCO-12class(source) & 5% Exdark(target) using SA-DA-Faster method
+- Train with 1% COCO-12class (source) & 5% Exdark (target) using SA-DA-Faster method
 ```shell
 python train_net.py  \
  --num-gpus 4 \
  --config configs/baseline/da/coco_1_exdark_5.yaml \
  OUTPUT_DIR output/da/coco12
 ```
-- Train with 1% BDD100k(source) & 10% Cityscapes(target) using SA-DA-Faster method
+- Train with 1% BDD100k (source) & 10% Cityscapes (target) using SA-DA-Faster method
 ```shell
 python train_net.py  \
  --num-gpus 4 \
@@ -179,7 +179,7 @@ python train_net.py  \
 
 3.DILLB(Ours)
 
-- Train the DILLB 1% COCO-12class(source) & 5% Exdark(target)
+- Train the DILLB 1% COCO-12class (source) & 5% Exdark (target)
 
 ```shell
 python model_to_mutihead.py \
@@ -192,7 +192,7 @@ python train_net.py  \
  OUTPUT_DIR output/dillb/coco1_exdark5
 ```
 
-- Train the DILLB 1% BDD100k(source) & 10% Cityscapes(target)
+- Train the DILLB 1% BDD100k (source) & 10% Cityscapes (target)
 
 ```shell
 python model_to_mutihead.py \
