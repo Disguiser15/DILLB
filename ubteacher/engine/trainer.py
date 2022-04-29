@@ -947,8 +947,8 @@ class DATrainer(DefaultTrainer):
             if len(metrics_dict) > 1:
                 self.storage.put_scalars(**metrics_dict)
 
-# Our DILIB Trainer
-class DILIBTrainer(DefaultTrainer):
+# Our DILLB Trainer
+class DILLBTrainer(DefaultTrainer):
     def __init__(self, cfg):
         """
         Args:
