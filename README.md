@@ -59,6 +59,15 @@ DILLB/
             ├── coco12
             └── exdark
 ```
+3. Process the dataset:
+
+```shell
+# Process bdd and cityscapes dataset 
+/bin/sh scripts/bdd1_city10.sh
+# Process coco12 and exdark dataset
+/bin/sh scripts/coco1_exdark5.sh
+```
+
 ## Training
 
 1. Source only
