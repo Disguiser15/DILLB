@@ -85,6 +85,8 @@ python train_net.py  \
  --config configs/source/bdd_sup100_run1.yaml \
  OUTPUT_DIR output/baseline/bdd
 ```
+- We provide the standard supervised Faster-RCNN model trained on COCO12 and BDD100k datasets [here](https://pan.baidu.com/s/1hmZ8xBjPPaOQeLasQm85Zg?pwd=lj9p).
+
 2. Baseline
 
 - Finetune with 1% COCO-12class (source) & 5% Exdark (target)
