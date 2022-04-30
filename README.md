@@ -62,9 +62,9 @@ DILLB/
 3. Process the dataset:
 
 ```shell
-# Process bdd and cityscapes dataset 
+# Process BDD100k and Cityscapes dataset 
 /bin/sh scripts/bdd1_city10.sh
-# Process coco12 and exdark dataset
+# Process COCO12 and Exdark dataset
 /bin/sh scripts/coco1_exdark5.sh
 ```
 
