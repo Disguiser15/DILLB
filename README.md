@@ -178,7 +178,7 @@ python train_net.py  \
  OUTPUT_DIR output/da/bdd
 ```
 
-3.DILLB(Ours)
+3. DILLB(Ours)
 
 - Train the DILLB 1% COCO-12class (source) & 5% Exdark (target)
 
