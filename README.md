@@ -2,7 +2,7 @@
 
 
 This is the PyTorch implementation of our paper: <br>
-[**Domain Incremental Learning for Object Detection**<br>](https://www.sciencedirect.com/science/article/abs/pii/S0031320325005424)
+[**Domain Incremental Learning for Object Detection**<br>](https://authors.elsevier.com/c/1lM6B77nKsA1m)
 
 <p align="center">
 <img src="teaser/DILLB.png" width="85%">
