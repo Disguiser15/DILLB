@@ -32,7 +32,7 @@ Follow the [INSTALL.md](https://github.com/facebookresearch/detectron2/blob/mast
 
 ## Dataset download
 
-1. Download [COCO12](https://pan.baidu.com/s/1bfhp4W0HAxw1kfBx03jE-w?pwd=cgcs), [Exdark](https://pan.baidu.com/s/1aY_qfFgxHtMyiNZ697XcRA?pwd=7me3), [BDD100k](https://pan.baidu.com/s/1VAyIxw2a9MMeNQIEG2AXRw?pwd=we8k) and [CityScapes](https://pan.baidu.com/s/1iLVt_qOuF4LuNt7YieBiCw?pwd=rn06) dataset. The datasets are all in COCO format.
+1. Download [COCO12](https://share.weiyun.com/eg05vkhP), [Exdark](https://share.weiyun.com/67HFdU17), [BDD100k](https://pan.baidu.com/s/1VAyIxw2a9MMeNQIEG2AXRw?pwd=we8k) and [CityScapes](https://pan.baidu.com/s/1iLVt_qOuF4LuNt7YieBiCw?pwd=rn06) dataset. The datasets are all in COCO format.
 
 
 2. Organize the dataset as following:
